@@ -896,6 +896,7 @@ static int do_menu(char *title, char **items, size_t num_items, int sel)
                 sel_item = num_items - 1;
                 select_item(title, curr_item, sel_item);
                 curr_item = sel_item;
+                break;
             case BTN_ON:
             case BTN_RIGHT:                
                 /* select current item */
