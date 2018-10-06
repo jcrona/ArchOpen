@@ -51,8 +51,8 @@
 #if defined(GMINI4XX) || defined(GMINI402)
 #define LCD_WIDTH 220
 #define LCD_HEIGHT 176
-#define X_OFFSET 0x09
-#define Y_OFFSET 0x09
+#define X_OFFSET 110
+#define Y_OFFSET 8
 #endif
 
 #if defined(AV3XX) || defined(AV4XX)
