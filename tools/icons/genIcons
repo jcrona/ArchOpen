@@ -1,0 +1,58 @@
+#!/bin/sh
+
+#################################################
+# Step 1 : menu icons
+#################################################
+
+subfolder="small std big"
+
+for type in $subfolder; do
+
+# define size
+    if [ "$type" = "small" ]; then
+        size=32
+    elif [ "$type" = "std" ]; then
+        size=48
+    else
+        size=64
+    fi
+    
+# go to right folder
+    rm -Rf $type
+    mkdir $type
+    cd $type
+    cp -Rf ../png/*.png ./
+# convert all png to right format
+    for file in *.png; do 
+        fname=`basename $file .png`
+        echo -n $fname
+# change size
+        if [ $size -ne 64 ]; then
+            echo -n " $type => convert"
+            convert -scale ${size}x${size} -quality 100 $file $file
+        fi
+        convert -map ../colormap.ico +dither $file $fname.ico;
+        echo " done"
+    done        
+    rm -f *.png
+    cd ../
+done
+
+#################################################
+# Step 2 : other icons (usb, DC, ...)
+#################################################
+
+rm -Rf others
+mkdir others
+cp -f png/others/*.png others
+cd others
+
+for file in *.png; do 
+    fname=`basename $file .png`
+    echo "Convert others " $fname
+    convert -map ../colormap.ico +dither $file $fname.ico;
+done
+rm -f *.png
+cd ../
+
+

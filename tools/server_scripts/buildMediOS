@@ -1,0 +1,76 @@
+# compilation script for mediOS
+
+curDate=`date +"%Y%m%d"`
+
+if [ "$1" == "dummy" ]; then
+arch=$2
+phpReport="/home/thomas/tmp/dummyReport.log"
+savPath="/home/thomas/tmp"
+distribPath="/home/thomas/tmp"
+else
+arch=$1
+phpReport=$2
+savPath=$3
+distribPath=$4
+fi
+
+reportFile="report_medios_${arch}_${curDate}.log"
+
+
+if [ "$arch" == "av3xx" ] || [ "$arch" == "av1xx" ] || [ "$arch" == "jbmm" ] || [ "$arch" == "pma" ]; then
+ext="bin"
+else
+if [ "$arch" == "g4xx" ]; then
+ext="wav"
+else
+if [ "$arch" == "g402" ] || [ "$arch" == "av4xx" ] || [ "$arch" == "av5xx" ]; then
+ext="avi"
+else
+echo "Error unsupported arch: $arch"
+exit
+fi
+fi
+fi
+
+echo "Building mediOS for $arch"
+
+zipFile="${arch}_medios_${curDate}.zip"
+zipDistrib="${arch}_medios_dist.zip"
+makeResult="${arch}_makeMedios_${curDate}.log"
+reportFile="${arch}_reportMedios_${curDate}.log"
+
+basePath="/home/thomas/archopen_src/build/trunk"
+
+cd ${basePath}
+
+cp -f ../${arch}.conf ./Makefile.conf
+
+make inc_dir
+make mk_api_file
+#disarding messages from make clean
+make clean 2>&1 > /dev/null
+
+buildAndReport ${makeResult} ${reportFile} ${phpReport} ${arch}
+
+rm -f ${distribPath}/*.bin ${distribPath}/*.avi ${distribPath}/*.wav
+cp -f medios.${ext} ${distribPath}
+rm -f ${distribPath}/medios/codec/*
+cp -f codec/* ${distribPath}/medios/codec/
+cd ${distribPath}
+zip -r9 ${basePath}/${zipDistrib} *
+cd ${basePath}
+
+echo ${zipDistrib}
+echo "--" 
+
+#zipping bin and arch spec file (wav,bin,avi)
+mv codec medios
+mv lang medios
+zip -r9 ${zipFile} medios.${ext} medios.bin medios/codec/ medios/lang/
+rm -Rf medios/codec medios/lang
+
+# ok everything is ready we can send
+mvFtp builds $reportFile $makeResult $zipFile $zipDistrib
+cp -f $reportFile $makeResult $zipFile $zipDistrib $savPath
+
+

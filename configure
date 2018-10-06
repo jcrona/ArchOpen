@@ -1,0 +1,440 @@
+#! /bin/bash
+
+# simple configure script
+# writen by wireddd
+# You can use it, but you can't sell it.
+
+# this is the function that asks the yes or no questions
+function CONFIG_QUERY_YN {
+CONFIGURE_OPTION=$1
+if [ $CONFIGURE_OPTION = -1 ]
+	then
+		USERSELECTION=""
+		while [ $CONFIGURE_OPTION == -1 ]; do
+			echo ""
+			echo "-----------------------------------------"
+			echo ""
+			if [ ! $USERSELECTION = "" ]; then
+				echo -n "'$USERSELECTION' is not a valid selection. "
+			fi
+			echo $2
+			echo -n "Choose y or n [$3]: "
+			read -e USERSELECTION
+			if [ "$USERSELECTION" == "" ]; then
+				if [ $3 == "y" ]; then
+					CONFIGURE_OPTION="1"
+				fi
+				if [ $3 == "n" ]; then
+					CONFIGURE_OPTION="0"
+				fi
+			else
+				if [ $USERSELECTION == "y" ]; then
+					CONFIGURE_OPTION="1"
+				fi
+				if [ $USERSELECTION == "n" ]; then
+					CONFIGURE_OPTION="0"
+				fi
+			fi
+		done
+fi
+return $CONFIGURE_OPTION
+}
+
+function CONFIG_QUERY_MULTI {
+CONFIGURE_OPTION=$1
+CONFIGURE_CHOICE_LIST=$2
+if [ $CONFIGURE_OPTION = -1 ]
+	then
+		USERSELECTION=""
+		while [ $CONFIGURE_OPTION == -1 ]; do
+			echo "-----------------------------------------"
+			echo ""
+			if [ ! $USERSELECTION == "" ]; then
+				echo -n "'$USERSELECTION' is not a valid selection. "
+			fi
+			echo "$3"
+			STR_ITEM="Choose"
+			I=1
+			for item in $CONFIGURE_CHOICE_LIST; do
+				echo "$I: $item"
+				STR_ITEM="$STR_ITEM $I"
+				I=$(($I+1))
+			done
+			echo -n $STR_ITEM "[$4]: "
+			read -e USERSELECTION
+						
+			if [ "$USERSELECTION" == "" ]; then
+				CONFIGURE_OPTION=$4
+			else
+				CONFIGURE_OPTION=$USERSELECTION				
+			fi
+		done
+fi
+return $CONFIGURE_OPTION
+}
+
+#init the variables that we are going to ask the user to set
+CONFIGURE_TARGET_DEVICE=-1
+CONFIGURE_CHK_USB_FW=-1
+CONFIGURE_HAVE_EXT_MODULE=-1
+CONFIGURE_HAVE_CF=-1
+CONFIGURE_HAVE_MAS_SOUND=-1
+CONFIGURE_HAVE_AIC23_SOUND=-1
+CONFIGURE_HAVE_EVT=-1
+CONFIGURE_BOOT_WITH_CONSOLE=-1
+CONFIGURE_HAVE_DBUG=-1
+CONFIGURE_HAVE_ST_RTC=-1
+CONFIGURE_HAVE_TIME=-1
+CONFIGURE_IS_RELEASE=-1
+CONFIGURE_TARGET_LANG=-1
+CONFIGURE_AVLO=-1
+CONFIGURE_LCD_TYPE=-1
+CONFIGURE_USE_GDB=-1
+
+if [ "$1" == "-d" ]; then
+CONFIGURE_TARGET_DEVICE="$2"
+echo "Using default value for target $2 lang: English"
+HAS_DEFAULT=1
+CONFIGURE_TARGET_LANG="1"
+CONFIGURE_AVLO="0"
+else
+# check if the file this script generates exists so we don't overwrite something
+if [ -f "./Makefile.conf" ]
+	then
+		echo -n "Makefile.conf exists, replace? y/n (n):"
+		read -e USERSELECTION
+		if [ "$USERSELECTION" == "" ]; then
+			exit
+		else
+			if [ $USERSELECTION == "n" ]; then
+				exit
+			fi
+			if [ $USERSELECTION == "y" ]; then
+				mv Makefile.conf Makefile.conf.bak
+				echo "Makefile.conf has been moved to Makefile.conf.bak"
+			fi
+		fi
+		HAVE_CONFIG_FILE=1
+	else
+		HAVE_CONFIG_FILE=0
+fi
+HAS_DEFAULT=-1
+fi
+
+# this is the first configuration question, AV3XX, GMINI4XX, AV1XX or JBMM
+if [ "$1" != "-d" ]; then
+CONFIG_QUERY_MULTI $CONFIGURE_TARGET_DEVICE "AV3XX GMINI4XX AV1XX JBMM GMINI402 AV4XX PMA AV5XX" "Please pick a target device" "1"
+CONFIGURE_TARGET_DEVICE=$?
+
+CONFIG_QUERY_MULTI $CONFIGURE_TARGET_LANG "English Francais Deutsch" "Please pick the default lang" "1"
+CONFIGURE_TARGET_LANG=$?
+fi
+
+TARGET_OK=0
+
+if [ "$1" != "-d" ]; then
+CONFIG_QUERY_YN $HAS_DEFAULT "Use default config?" "y"
+HAS_DEFAULT=$?
+fi
+
+if [ $HAS_DEFAULT == "1" ]; then
+CONFIGURE_IS_RELEASE="0"
+CONFIGURE_USE_GDB="0"
+fi
+
+if [ $CONFIGURE_TARGET_DEVICE == "1" ]; then
+	        CONFIGURE_TARGET_DEVICE="AV3XX"
+            CONFIGURE_HAVE_MAS_SOUND="1"
+            CONFIGURE_HAVE_AIC23_SOUND="0" 
+            CONFIGURE_CHIP_TYPE="DSC25"
+            CONFIGURE_HAVE_EXT_MODULE="1"
+            CONFIGURE_HAVE_CF="1"
+	        TARGET_OK=1
+            CONFIGURE_FM_REMOTE_VERSION="v1"
+            CONFIGURE_SPLASH_TYPE="SPLASH_320x240"
+            CONFIGURE_HAS_SPKR="0"
+            CONFIGURE_HAVE_ST_RTC="1"
+            CONFIGURE_HAVE_TIME="1"
+            CONFIGURE_LCD_TYPE="0"
+            if [ $HAS_DEFAULT == "1" ]; then
+            CONFIGURE_HAVE_DBUG="0"
+            CONFIGURE_CHK_USB_FW="1"
+            CONFIGURE_HAVE_EVT="1"
+            CONFIGURE_BOOT_WITH_CONSOLE="0"
+            fi
+fi
+
+if [ $CONFIGURE_TARGET_DEVICE == "2" ]; then
+            CONFIGURE_TARGET_DEVICE="GMINI4XX"
+            CONFIGURE_AVLO="0"
+	        CONFIGURE_HAVE_MAS_SOUND="0"
+            CONFIGURE_HAVE_AIC23_SOUND="1"     
+            CONFIGURE_HAVE_EXT_MODULE="0"
+            CONFIGURE_HAVE_CF="1"
+            CONFIGURE_CHIP_TYPE="DM270"
+	        TARGET_OK=1
+            CONFIGURE_FM_REMOTE_VERSION="v2"
+            CONFIGURE_SPLASH_TYPE="SPLASH_220x176"
+            CONFIGURE_HAS_SPKR="0"
+            CONFIGURE_HAVE_ST_RTC="1"
+            CONFIGURE_HAVE_TIME="1"
+            CONFIGURE_LCD_TYPE="0"
+            if [ $HAS_DEFAULT == "1" ]; then
+            CONFIGURE_HAVE_DBUG="0"
+            CONFIGURE_CHK_USB_FW="1"
+            CONFIGURE_HAVE_EVT="1"
+            CONFIGURE_BOOT_WITH_CONSOLE="0"
+            fi
+fi
+
+if [ $CONFIGURE_TARGET_DEVICE == "3" ]; then
+            CONFIGURE_TARGET_DEVICE="AV1XX"
+	        CONFIGURE_HAVE_MAS_SOUND="1"
+            CONFIGURE_HAVE_AIC23_SOUND="0" 
+            CONFIGURE_CHIP_TYPE="DSC25"                
+            CONFIGURE_HAVE_EXT_MODULE="1"
+            CONFIGURE_HAVE_CF="1"            
+	        TARGET_OK=1
+            CONFIGURE_FM_REMOTE_VERSION="v1"
+            CONFIGURE_SPLASH_TYPE="SPLASH_320x234"
+            CONFIGURE_HAS_SPKR="0"
+            CONFIGURE_HAVE_ST_RTC="1"
+            CONFIGURE_HAVE_TIME="1"
+            CONFIGURE_LCD_TYPE="0"
+            if [ $HAS_DEFAULT == "1" ]; then
+            CONFIGURE_HAVE_DBUG="0"
+            CONFIGURE_CHK_USB_FW="1"
+            CONFIGURE_HAVE_EVT="1"
+            CONFIGURE_BOOT_WITH_CONSOLE="0"
+            fi
+fi
+
+if [ $CONFIGURE_TARGET_DEVICE == "4" ]; then
+            CONFIGURE_TARGET_DEVICE="JBMM"
+	        CONFIGURE_HAVE_MAS_SOUND="0"
+            CONFIGURE_HAVE_AIC23_SOUND="0"
+            CONFIGURE_CHIP_TYPE="DSC21"
+            CONFIGURE_HAVE_EXT_MODULE="1"
+            CONFIGURE_HAVE_CF="1"            
+	        TARGET_OK=1
+            CONFIGURE_FM_REMOTE_VERSION="v1"
+            CONFIGURE_SPLASH_TYPE="SPLASH_320x234"
+            CONFIGURE_HAS_SPKR="0"
+            CONFIGURE_HAVE_ST_RTC="1"
+            CONFIGURE_HAVE_TIME="1"
+            CONFIGURE_LCD_TYPE="0"
+            if [ $HAS_DEFAULT == "1" ]; then
+            CONFIGURE_HAVE_DBUG="0"
+            CONFIGURE_CHK_USB_FW="1"
+            CONFIGURE_HAVE_EVT="1"
+            CONFIGURE_BOOT_WITH_CONSOLE="0"
+            fi
+fi
+
+if [ $CONFIGURE_TARGET_DEVICE == "5" ]; then
+            CONFIGURE_TARGET_DEVICE="GMINI402"
+            CONFIGURE_AVLO="0"
+	        CONFIGURE_HAVE_MAS_SOUND="0"
+            CONFIGURE_HAVE_AIC23_SOUND="1"     
+            CONFIGURE_HAVE_EXT_MODULE="0"
+            CONFIGURE_HAVE_CF="0"
+            CONFIGURE_CHIP_TYPE="DM320"
+	        TARGET_OK=1
+            CONFIGURE_FM_REMOTE_VERSION="v2"
+            CONFIGURE_SPLASH_TYPE="SPLASH_220x176"
+            CONFIGURE_HAS_SPKR="0"
+            CONFIGURE_HAVE_ST_RTC="1"
+            CONFIGURE_HAVE_TIME="1"
+            CONFIGURE_LCD_TYPE="0"
+            if [ $HAS_DEFAULT == "1" ]; then
+            CONFIGURE_HAVE_DBUG="0"
+            CONFIGURE_CHK_USB_FW="1"
+            CONFIGURE_HAVE_EVT="1"
+            CONFIGURE_BOOT_WITH_CONSOLE="0"
+            fi
+fi
+
+if [ $CONFIGURE_TARGET_DEVICE == "6" ]; then
+            CONFIGURE_TARGET_DEVICE="AV4XX"
+            CONFIGURE_AVLO="0"
+	        CONFIGURE_HAVE_MAS_SOUND="0"
+            CONFIGURE_HAVE_AIC23_SOUND="1"     
+            CONFIGURE_HAVE_EXT_MODULE="0"
+            CONFIGURE_HAVE_CF="1"
+            CONFIGURE_CHIP_TYPE="DM270"
+	        TARGET_OK=1
+            CONFIGURE_FM_REMOTE_VERSION="v2"
+            CONFIGURE_SPLASH_TYPE="SPLASH_320x240"
+            CONFIGURE_HAS_SPKR="1"
+            CONFIGURE_HAVE_ST_RTC="1"
+            CONFIGURE_HAVE_TIME="1"
+            CONFIGURE_LCD_TYPE="0"
+            if [ $HAS_DEFAULT == "1" ]; then
+            CONFIGURE_HAVE_DBUG="0"
+            CONFIGURE_CHK_USB_FW="1"
+            CONFIGURE_HAVE_EVT="1"
+            CONFIGURE_BOOT_WITH_CONSOLE="0"
+            fi
+fi
+
+if [ $CONFIGURE_TARGET_DEVICE == "7" ]; then
+            CONFIGURE_TARGET_DEVICE="PMA"
+            CONFIGURE_AVLO="0"
+	        CONFIGURE_HAVE_MAS_SOUND="0"
+            CONFIGURE_HAVE_AIC23_SOUND="0"     
+            CONFIGURE_HAVE_EXT_MODULE="0"
+            CONFIGURE_HAVE_CF="0"
+            CONFIGURE_HAVE_FM_REMOTE="0"
+            CONFIGURE_CHIP_TYPE="DM270"
+	        TARGET_OK=1
+            CONFIGURE_FM_REMOTE_VERSION="v2"
+            CONFIGURE_SPLASH_TYPE="SPLASH_320x240"
+            CONFIGURE_HAS_SPKR="0"
+            CONFIGURE_HAVE_ST_RTC="0"
+            CONFIGURE_HAVE_TIME="0"
+            CONFIGURE_LCD_TYPE="0"
+            if [ $HAS_DEFAULT == "1" ]; then
+            CONFIGURE_HAVE_DBUG="0"
+            CONFIGURE_CHK_USB_FW="1"
+            CONFIGURE_HAVE_EVT="1"
+            CONFIGURE_BOOT_WITH_CONSOLE="0"
+            fi
+fi
+
+if [ $CONFIGURE_TARGET_DEVICE == "8" ]; then
+            CONFIGURE_TARGET_DEVICE="AV5XX"
+            CONFIGURE_AVLO="0"
+            CONFIGURE_HAVE_MAS_SOUND="0"
+            CONFIGURE_HAVE_AIC23_SOUND="1"     
+            CONFIGURE_HAVE_EXT_MODULE="0"
+            CONFIGURE_HAVE_CF="0"
+            CONFIGURE_CHIP_TYPE="DM320"
+            TARGET_OK=1
+            CONFIGURE_FM_REMOTE_VERSION="v2"
+            CONFIGURE_SPLASH_TYPE="SPLASH_480x272"
+            CONFIGURE_HAS_SPKR="1"
+            CONFIGURE_HAVE_TIME="0"
+            CONFIGURE_LCD_TYPE="1"
+            if [ $HAS_DEFAULT == "1" ]; then
+            CONFIGURE_HAVE_DBUG="0"
+            CONFIGURE_CHK_USB_FW="1"
+            CONFIGURE_HAVE_EVT="1"
+            CONFIGURE_HAVE_ST_RTC="1"
+            CONFIGURE_BOOT_WITH_CONSOLE="0"
+            fi
+fi
+
+if [ $TARGET_OK == 0 ]; then
+	echo ""
+	echo "Bad value for target"
+	exit
+fi
+
+
+
+CONFIGURE_TARGET_LANG_NAME="X"
+if [ $CONFIGURE_TARGET_LANG == "1" ]; then
+    CONFIGURE_TARGET_LANG_NAME="english"
+fi
+if [ $CONFIGURE_TARGET_LANG == "2" ]; then
+    CONFIGURE_TARGET_LANG_NAME="francais"
+fi
+if [ $CONFIGURE_TARGET_LANG == "3" ]; then
+    CONFIGURE_TARGET_LANG_NAME="deutsch"
+fi
+if [ $CONFIGURE_TARGET_LANG == "X" ]; then
+    echo ""
+    echo "Bad value for lang"
+    exit
+fi
+echo "Configuring for $CONFIGURE_TARGET_DEVICE - $CONFIGURE_TARGET_LANG_NAME"
+# this section of the script asks all of the yes or no querys, they are of the following format:
+# CONFIG_QUERY_YN $variable_to_set "question to ask" "default answer"
+# variable_to_set=$?
+
+CONFIG_QUERY_YN $CONFIGURE_AVLO "Build Avlo?" "n"
+CONFIGURE_AVLO=$?
+
+if [ $CONFIGURE_AVLO == "1" ]; then
+CONFIGURE_HAVE_EXT_MODULE="0"
+CONFIGURE_HAVE_MAS_SOUND="0"
+CONFIGURE_HAVE_AIC23_SOUND="0"
+CONFIGURE_HAVE_CF="0"
+
+# need specific config for Av3xx
+if [ $CONFIGURE_TARGET_DEVICE == "AV3XX" ]; then
+CONFIGURE_SPLASH_TYPE="SPLASH_AVLO_320x240"
+fi
+# need specific config for Av1xx
+if [ $CONFIGURE_TARGET_DEVICE == "AV1XX" ]; then
+echo "Avlo - Av1XX spec config"
+CONFIGURE_HAVE_MAS_SOUND="1"
+fi
+# no specific config for JBMM
+#if [ $CONFIGURE_TARGET_DEVICE == "JBMM" ]; then
+#fi
+fi
+
+CONFIG_QUERY_YN $CONFIGURE_HAVE_DBUG "Build with GDB support?" "n"
+CONFIGURE_USE_GDB=$?
+
+CONFIG_QUERY_YN $CONFIGURE_HAVE_DBUG "Build with aoMulator support? (adds bkpt for some arch)" "n"
+CONFIGURE_HAVE_DBUG=$?
+
+CONFIG_QUERY_YN $CONFIGURE_CHK_USB_FW "CHK_USB_FW? note: if you choose no, HD timer might mess with USB when USB is plugged and enable" "y"
+CONFIGURE_CHK_USB_FW=$?
+
+CONFIG_QUERY_YN $CONFIGURE_HAVE_EVT "HAVE_EVT?" "y"
+CONFIGURE_HAVE_EVT=$?
+
+CONFIG_QUERY_YN $CONFIGURE_BOOT_WITH_CONSOLE "BOOT WITH CONSOLE?" "n"
+CONFIGURE_BOOT_WITH_CONSOLE=$?
+
+#CONFIG_QUERY_YN $CONFIGURE_IS_RELEASE "Build a release?" "n"
+#CONFIGURE_IS_RELEASE=$?
+
+if [ $CONFIGURE_USE_GDB == "1" ]; then
+CONFIGURE_HAVE_DBUG="0"
+CONFIGURE_BOOT_WITH_CONSOLE="1"
+echo "Forcing no support for aoMulator and boot with console"
+fi
+
+echo "-----------------------------------------"
+
+#we have all of our user input lets generate Makefile.conf
+echo -n "Generating './Makefile.conf' ... "
+
+cat ./Makefile.conf.template | sed > ./Makefile.conf \
+ -e "s,%CONFIGURE_TARGET_DEVICE%,${CONFIGURE_TARGET_DEVICE},g" \
+ -e "s,%CONFIGURE_CHK_USB_FW%,${CONFIGURE_CHK_USB_FW},g" \
+ -e "s,%CONFIGURE_HAVE_EXT_MODULE%,${CONFIGURE_HAVE_EXT_MODULE},g" \
+ -e "s,%CONFIGURE_HAVE_MAS_SOUND%,${CONFIGURE_HAVE_MAS_SOUND},g" \
+ -e "s,%CONFIGURE_HAVE_AIC23_SOUND%,${CONFIGURE_HAVE_AIC23_SOUND},g" \
+ -e "s,%CONFIGURE_HAVE_EVT%,${CONFIGURE_HAVE_EVT},g" \
+ -e "s,%CONFIGURE_BOOT_WITH_CONSOLE%,${CONFIGURE_BOOT_WITH_CONSOLE},g" \
+ -e "s,%CONFIGURE_CHIP_TYPE%,${CONFIGURE_CHIP_TYPE},g" \
+ -e "s,%CONFIGURE_FM_REMOTE_VERSION%,${CONFIGURE_FM_REMOTE_VERSION},g" \
+ -e "s,%CONFIGURE_SPLASH_TYPE%,${CONFIGURE_SPLASH_TYPE},g" \
+ -e "s,%CONFIGURE_HAS_SPKR%,${CONFIGURE_HAS_SPKR},g" \
+ -e "s,%CONFIGURE_HAVE_CF%,${CONFIGURE_HAVE_CF},g" \
+ -e "s,%CONFIGURE_HAVE_TIME%,${CONFIGURE_HAVE_TIME},g" \
+ -e "s,%CONFIGURE_HAVE_ST_RTC%,${CONFIGURE_HAVE_ST_RTC},g" \
+ -e "s,%CONFIGURE_IS_RELEASE%,${CONFIGURE_IS_RELEASE},g" \
+ -e "s,%CONFIGURE_TARGET_LANG_NAME%,${CONFIGURE_TARGET_LANG_NAME},g" \
+ -e "s,%CONFIGURE_AVLO%,${CONFIGURE_AVLO},g" \
+ -e "s,%CONFIGURE_LCD_TYPE%,${CONFIGURE_LCD_TYPE},g" \
+ -e "s,%CONFIGURE_USE_GDB%,${CONFIGURE_USE_GDB},g" \
+ -e "s,%CONFIGURE_HAVE_DBUG%,${CONFIGURE_HAVE_DBUG},g"
+
+#did everything work?
+if [ -f "./Makefile.conf" ]; then
+	echo "Done"
+    if [ "$1" == "-d" ]; then
+        low_name=$(echo ${CONFIGURE_TARGET_DEVICE} | tr '[A-Z]' '[a-z]');
+        cp ./Makefile.conf ${low_name}.conf
+    fi
+else
+	echo "Error"
+fi
+
+exit

@@ -1,0 +1,6 @@
+#!/bin/sh
+# create all bin files from lang
+
+./script/genBin english.lang english.lng 1
+./script/genBin francais.lang francais.lng 2
+./script/genBin deutsch.lang deutsch.lng 3

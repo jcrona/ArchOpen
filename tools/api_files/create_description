@@ -1,0 +1,11 @@
+#!/bin/sh
+# create files
+
+FCT_TYPE="$2"
+
+awk 'BEGIN{FS="[\t ]*#[\t ]*"} \
+NF==0{next} \
+{if ($2!="api_inc" && $2!="k_inc" && $4=="'"$FCT_TYPE"'") \
+{print "<tr><td><b>" $2 "</b></td><td>" $1 "&nbsp;<b>" $2 "</b>(<i>" $3 "</i>)</td><td>" $5 "</td></tr>"\
+}}' $1
+
