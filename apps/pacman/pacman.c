@@ -68,7 +68,7 @@ int app_main(int argc, char * * argv)
         
     gfx_planeGetPos(BMAP1,&x_ori,&y_ori);
     
-    if(screen_x >= 320 || screen_y >= 240) /* big screen or not*/
+    if(screen_x >= 320 && screen_y >= 240) /* big screen or not*/
     {
         splash = splash_320x240_data;
         nbLev=NB_LEVEL_320x240;
